@@ -65,11 +65,13 @@
 #include "scene/gui/file_dialog.h"
 #include "scene/gui/dialogs.h"
 #include "scene/gui/tree.h"
+#include "scene/gui/palette.h"
 #include "scene/gui/text_edit.h"
 #include "scene/gui/texture_button.h"
 #include "scene/gui/separator.h"
 #include "scene/gui/rich_text_label.h"
 #include "scene/gui/box_container.h"
+#include "scene/gui/flow_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/split_container.h"
 #include "scene/gui/video_player.h"
@@ -300,6 +302,9 @@ void register_scene_types() {
 	ObjectTypeDB::register_virtual_type<BoxContainer>();
 	ObjectTypeDB::register_type<HBoxContainer>();
 	ObjectTypeDB::register_type<VBoxContainer>();
+	ObjectTypeDB::register_virtual_type<FlowContainer>();
+	ObjectTypeDB::register_type<HFlowContainer>();
+	ObjectTypeDB::register_type<VFlowContainer>();
 	ObjectTypeDB::register_type<GridContainer>();
 	ObjectTypeDB::register_type<CenterContainer>();
 	ObjectTypeDB::register_type<ScrollContainer>();
@@ -325,9 +330,11 @@ void register_scene_types() {
 	ObjectTypeDB::register_type<LineEdit>();
 	ObjectTypeDB::register_type<PopupMenu>();
 	ObjectTypeDB::register_type<Tree>();
+	ObjectTypeDB::register_type<Palette>();
 	ObjectTypeDB::register_type<TextEdit>();
 
 	ObjectTypeDB::register_virtual_type<TreeItem>();
+	ObjectTypeDB::register_virtual_type<PaletteItem>();
 	ObjectTypeDB::register_type<OptionButton>();
 	ObjectTypeDB::register_type<SpinBox>();
 	ObjectTypeDB::register_type<ReferenceFrame>();

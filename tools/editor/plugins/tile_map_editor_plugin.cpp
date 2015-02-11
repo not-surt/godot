@@ -42,6 +42,9 @@ void TileMapEditor::_notification(int p_what) {
 
 		case NOTIFICATION_READY: {
 
+			eraser->set_icon( get_icon("Eraser","EditorIcons"));
+			pencil->set_icon( get_icon("Pencil","EditorIcons"));
+			brush->set_icon( get_icon("Brush","EditorIcons"));
 			mirror_x->set_icon( get_icon("MirrorX","EditorIcons"));
 			mirror_y->set_icon( get_icon("MirrorY","EditorIcons"));
 			transpose->set_icon( get_icon("Transpose","EditorIcons"));
@@ -50,7 +53,7 @@ void TileMapEditor::_notification(int p_what) {
 			rotate_180->set_icon( get_icon("Rotate180","EditorIcons"));
 			rotate_270->set_icon( get_icon("Rotate270","EditorIcons"));
 
-		} break;
+		} break; 
 	}
 
 }
@@ -75,7 +78,7 @@ int TileMapEditor::get_selected_tile() const {
 	TreeItem *item = palette->get_selected();
 	if (!item)
 		return TileMap::INVALID_CELL;
-	return item->get_metadata(0);
+	return item->get_metadata(palette->get_selected_column());
 }
 
 void TileMapEditor::set_selected_tile(int p_tile) {
@@ -115,42 +118,65 @@ void TileMapEditor::_set_cell(const Point2i& p_pos,int p_value,bool p_flip_h, bo
 }
 
 void TileMapEditor::_update_palette() {
-
 	if (!node)
 		return;
 
-	palette->clear();;
+	palette->clear();
 
 	Ref<TileSet> tileset=node->get_tileset();
 	if (!tileset.is_valid())
 		return;
 
-
 	TreeItem *root = palette->create_item();
 	palette->set_hide_root(true);
+	int preview_size = EDITOR_DEF("tile_map/preview_size",64);
+	palette->set_columns(MAX((int)(palette->get_size().width / preview_size), 1));
+
 	List<int> tiles;
 	tileset->get_tile_list(&tiles);
 
+	TreeItem *selected=NULL;
+	int col=0;
+	TreeItem *tile=NULL;
+	int selected_col=0;
+
 	for(List<int>::Element *E=tiles.front();E;E=E->next()) {
+		
+		if (col==0) {
+			tile = palette->create_item(root);
+		}
 
-		TreeItem *tile = palette->create_item(root);
-
-		tile->set_icon_max_width(0,64);
 		Ref<Texture> tex = tileset->tile_get_texture(E->get());
+		tile->set_icon_max_width(col,preview_size);
 		if (tex.is_valid()) {
-			tile->set_icon(0,tex);
+			tile->set_icon(col,tex);
 			Rect2 region = tileset->tile_get_region(E->get());
 			if (region!=Rect2())
-				tile->set_icon_region(0,region);
+				tile->set_icon_region(col,region);
 
 		} else if (tileset->tile_get_name(E->get())!="")
-			tile->set_text(0,tileset->tile_get_name(E->get()));
+			tile->set_text(col,tileset->tile_get_name(E->get()));
 		else
-			tile->set_text(0,"#"+itos(E->get()));
+			tile->set_text(col,"#"+itos(E->get()));
 
-		tile->set_metadata(0,E->get());
+		tile->set_metadata(col,E->get());
 
+		if (get_selected_tile()==E->get()) {
+			selected=tile;
+			selected_col=col;
+		}
+
+		col++;
+		if (col==palette->get_columns())
+			col=0;
 	}
+	
+	// Prevent selection of empty trailing columns
+	while (col!=0&&col<palette->get_columns())
+		tile->set_selectable(col++,false);
+
+	if (selected)
+		selected->select(selected_col);
 }
 
 void TileMapEditor::_node_removed(Node *p_node) {
@@ -714,6 +740,7 @@ void TileMapEditor::_bind_methods() {
 	ObjectTypeDB::bind_method(_MD("_canvas_mouse_exit"),&TileMapEditor::_canvas_mouse_exit);
 	ObjectTypeDB::bind_method(_MD("_tileset_settings_changed"),&TileMapEditor::_tileset_settings_changed);
 	ObjectTypeDB::bind_method(_MD("_update_transform_buttons"),&TileMapEditor::_update_transform_buttons);
+	ObjectTypeDB::bind_method(_MD("_update_palette"),&TileMapEditor::_update_palette);
 
 }
 
@@ -787,20 +814,36 @@ TileMapEditor::TileMapEditor(EditorNode *p_editor) {
 	editor=p_editor;
 	undo_redo = editor->get_undo_redo();
 
-	int mw = EDITOR_DEF("tile_map/palette_min_width",80);
-	Control *ec = memnew( Control);
-	ec->set_custom_minimum_size(Size2(mw,0));
-	add_child(ec);
-
 	// Add tile palette
 	palette = memnew( Tree );
+	int mw = EDITOR_DEF("tile_map/palette_min_width",80);
+	palette->set_custom_minimum_size(Size2(mw,0));
 	palette->set_v_size_flags(SIZE_EXPAND_FILL);
 	add_child(palette);
+	palette->connect("resized", this, "_update_palette");
 
 	// Add menu items
-	canvas_item_editor_hb = memnew( HBoxContainer );
+	canvas_item_editor_hb = memnew( FlowContainer );
+	canvas_item_editor_hb->set_v_size_flags(SIZE_EXPAND_FILL);
+	canvas_item_editor_hb->set_h_size_flags(SIZE_EXPAND_FILL);
 	CanvasItemEditor::get_singleton()->add_control_to_menu_panel(canvas_item_editor_hb);
 	canvas_item_editor_hb->add_child( memnew( VSeparator ));
+	eraser = memnew( ToolButton );
+	eraser->set_toggle_mode(true);
+	eraser->set_tooltip("Eraser");
+	eraser->set_focus_mode(FOCUS_NONE);
+	canvas_item_editor_hb->add_child(eraser);
+	pencil = memnew( ToolButton );
+	pencil->set_toggle_mode(true);
+	pencil->set_tooltip("Pencil");
+	pencil->set_focus_mode(FOCUS_NONE);
+	canvas_item_editor_hb->add_child(pencil);
+	brush = memnew( ToolButton );
+	brush->set_toggle_mode(true);
+	brush->set_tooltip("Brush");
+	brush->set_focus_mode(FOCUS_NONE);
+	canvas_item_editor_hb->add_child(brush);
+	canvas_item_editor_hb->add_child(memnew(VSeparator));
 	mirror_x = memnew( ToolButton );
 	mirror_x->set_toggle_mode(true);
 	mirror_x->set_tooltip("Mirror X (A)");

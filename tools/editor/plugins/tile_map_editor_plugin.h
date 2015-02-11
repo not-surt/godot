@@ -34,6 +34,7 @@
 #include "scene/2d/tile_map.h"
 #include "scene/gui/tool_button.h"
 #include "scene/gui/button_group.h"
+#include "scene/gui/flow_container.h"
 /**
 	@author Juan Linietsky <reduzio@gmail.com>
 */
@@ -71,6 +72,9 @@ class TileMapEditor : public VBoxContainer {
 	bool mouse_over;
 
 	Label *mirror_label;
+	ToolButton *eraser;
+	ToolButton *pencil;
+	ToolButton *brush;
 	ToolButton *mirror_x;
 	ToolButton *mirror_y;
 	ToolButton *transpose;
@@ -79,7 +83,7 @@ class TileMapEditor : public VBoxContainer {
 	ToolButton *rotate_180;
 	ToolButton *rotate_270;
 
-	HBoxContainer *canvas_item_editor_hb;
+	FlowContainer *canvas_item_editor_hb;
 
 
 	struct CellOp {
@@ -114,7 +118,7 @@ protected:
 	void _update_transform_buttons(Object *p_button=0);
 public:
 
-	HBoxContainer *get_canvas_item_editor_hb() const { return canvas_item_editor_hb; }
+	FlowContainer *get_canvas_item_editor_hb() const { return canvas_item_editor_hb; }
 	Vector2 snap_point(const Vector2& p_point) const;
 	bool forward_input_event(const InputEvent& p_event);
 	void edit(Node *p_tile_map);
