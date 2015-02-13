@@ -72,12 +72,11 @@ class TileMapEditor : public VBoxContainer {
 	bool mouse_over;
 
 	Label *mirror_label;
-	ToolButton *eraser;
+	ToolButton *transpose;
 	ToolButton *pencil;
 	ToolButton *brush;
 	ToolButton *mirror_x;
 	ToolButton *mirror_y;
-	ToolButton *transpose;
 	ToolButton *rotate_0;
 	ToolButton *rotate_90;
 	ToolButton *rotate_180;
